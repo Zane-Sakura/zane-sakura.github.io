@@ -2,7 +2,74 @@
 const prefersReduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const canFine = matchMedia("(pointer: fine)").matches;
 const DPR = Math.min(window.devicePixelRatio || 1, 2);
+// ===== Nền nước gợn sóng =====
+const waterCanvas = document.getElementById("water");
+if (waterCanvas && !prefersReduce) {
+  const wctx = waterCanvas.getContext("2d");
+  const bgImg = new Image();
+  bgImg.src = "assets/background.jpg";
+  // Lưu ý: đặt ảnh nền tại assets/background.jpg (xem phần trả lời trước)
 
+  const SCALE = 0.25;   // vẽ nước ở độ phân giải thấp để nhẹ máy, sau đó phóng to
+  let W = 0, H = 0, w = 0, h = 0;
+  let src = null, dst = null, srcData = null, dstData = null;
+
+  function prepare() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    w = Math.max(1, Math.round(W * SCALE));
+    h = Math.max(1, Math.round(H * SCALE));
+    waterCanvas.width = w;
+    waterCanvas.height = h;
+
+    // Vẽ ảnh nền "cover" vào canvas nhỏ
+    const off = document.createElement("canvas");
+    off.width = w;
+    off.height = h;
+    const octx = off.getContext("2d");
+    const ratio = Math.max(w / bgImg.width, h / bgImg.height);
+    const dw = bgImg.width * ratio;
+    const dh = bgImg.height * ratio;
+    octx.drawImage(bgImg, (w - dw) / 2, (h - dh) / 2, dw, dh);
+
+    src = octx.getImageData(0, 0, w, h);
+    dst = wctx.createImageData(w, h);
+    srcData = src.data;
+    dstData = dst.data;
+  }
+
+  bgImg.onload = () => {
+    prepare();
+    window.addEventListener("resize", prepare);
+    requestAnimationFrame(frame);
+  };
+
+  function frame(now) {
+    const t = now / 1000;
+    const amp = 1.6; // độ lệch pixel, tăng để gợn mạnh hơn
+    for (let y = 0; y < h; y++) {
+      // Sóng ngang: mỗi hàng dịch trái/phải theo sóng sin
+      const offX = Math.sin(y * 0.12 + t * 1.3) * amp
+                 + Math.sin(y * 0.05 - t * 0.7) * amp * 0.6;
+      for (let x = 0; x < w; x++) {
+        // Sóng dọc nhẹ theo cột
+        const offY = Math.cos(x * 0.1 + t * 1.1) * amp * 0.5;
+        let sx = Math.round(x + offX);
+        let sy = Math.round(y + offY);
+        if (sx < 0) sx = 0; else if (sx >= w) sx = w - 1;
+        if (sy < 0) sy = 0; else if (sy >= h) sy = h - 1;
+        const si = (sy * w + sx) * 4;
+        const di = (y * w + x) * 4;
+        dstData[di] = srcData[si];
+        dstData[di + 1] = srcData[si + 1];
+        dstData[di + 2] = srcData[si + 2];
+        dstData[di + 3] = 255;
+      }
+    }
+    wctx.putImageData(dst, 0, 0);
+    requestAnimationFrame(frame);
+  }
+}
 // Năm ở footer
 const yearEl = document.getElementById("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
