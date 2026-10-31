@@ -35,7 +35,7 @@ body::before {
   z-index: -2;
 }
 
-/* Vùng chứa sao chổi nền */
+/* Vùng chứa các hạt bay nền */
 #particles {
   position: fixed;
   inset: 0;
@@ -44,23 +44,23 @@ body::before {
   overflow: hidden;
 }
 
-/* Sao chổi: đầu nhọn sáng, đuôi rộng dần và mờ */
+/* Hạt tròn bay lên */
 .particle {
   position: absolute;
-  bottom: -160px;
-  width: var(--w);
-  height: var(--h);
-  background: linear-gradient(to top, rgba(0,0,0,0) 0%, var(--c) 35%, #ffffff 100%);
-  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  bottom: -20px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 8px var(--c), 0 0 16px var(--c);
   opacity: 0;
-  animation: comet var(--d) linear infinite;
+  animation: float var(--d) linear infinite;
   animation-delay: var(--delay);
 }
-@keyframes comet {
-  0%   { transform: translate(0, 0) rotate(var(--a)); opacity: 0; }
+@keyframes float {
+  0%   { transform: translate(0, 0) scale(.6); opacity: 0; }
   10%  { opacity: var(--o); }
+  50%  { transform: translate(var(--x), -50vh) scale(1); }
   90%  { opacity: var(--o); }
-  100% { transform: translate(var(--x), -115vh) rotate(var(--a)); opacity: 0; }
+  100% { transform: translate(calc(var(--x) * -1), -110vh) scale(.6); opacity: 0; }
 }
 
 /* Khung chính, có vệt sáng quét mỗi 10s */
@@ -100,7 +100,7 @@ body::before {
   to   { opacity: 1; transform: none; }
 }
 
-/* Avatar đứng yên, viền mảnh và vầng sáng chạy quanh mỗi 5s */
+/* Avatar đứng yên, có vầng sáng dài chạy quanh viền mỗi 5s */
 .avatar-wrap {
   position: relative;
   width: 150px;
@@ -111,20 +111,20 @@ body::before {
 .avatar-wrap::before {
   content: "";
   position: absolute;
-  inset: -6px;
+  inset: -8px;
   border-radius: 50%;
   background: conic-gradient(
     from 0deg,
     transparent 0deg,
-    transparent 230deg,
-    rgba(94,231,255,.35) 290deg,
-    #5ee7ff 330deg,
-    #ffffff 350deg,
+    transparent 200deg,
+    rgba(94,231,255,.15) 260deg,
+    rgba(94,231,255,.7) 320deg,
+    #ffffff 352deg,
     transparent 360deg
   );
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 100%);
-          mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 100%);
-  filter: drop-shadow(0 0 6px var(--cyan));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 100%);
+          mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 100%);
+  filter: drop-shadow(0 0 8px var(--cyan)) drop-shadow(0 0 16px rgba(94,231,255,.6));
   animation: orbit-spin 5s linear infinite;
 }
 @keyframes orbit-spin { to { transform: rotate(360deg); } }
