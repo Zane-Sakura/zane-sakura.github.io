@@ -37,24 +37,48 @@ if (particles) {
   }
 }
 
-// Bấm hoặc chạm avatar: ngọn lửa bừng lên bao quanh
+// Bấm hoặc chạm avatar: avatar sáng lên, lửa chạy từ đáy lên hai bên theo viền
 const avatarWrap = document.querySelector(".avatar-wrap");
 if (avatarWrap) {
+  let fireTimer = null;
+
   avatarWrap.addEventListener("click", () => {
+    // Xóa lửa cũ và reset trạng thái sáng để có thể bấm liên tục
+    avatarWrap.querySelectorAll(".fire").forEach((f) => f.remove());
+    avatarWrap.classList.remove("lit");
+    void avatarWrap.offsetWidth; // ép trình duyệt tính lại để animation chạy lại
+    avatarWrap.classList.add("lit");
+
     const fire = document.createElement("div");
     fire.className = "fire";
-    const tongues = 28;
-    for (let i = 0; i < tongues; i++) {
-      const s = document.createElement("span");
-      const angle = (360 / tongues) * i + (Math.random() * 10 - 5);
-      s.style.setProperty("--a", angle + "deg");
-      s.style.setProperty("--w", (14 + Math.random() * 12) + "px");
-      s.style.setProperty("--h", (50 + Math.random() * 40) + "px");
-      s.style.setProperty("--r", (70 + Math.random() * 40) + "px");
-      s.style.setProperty("--delay", (Math.random() * 0.25) + "s");
-      fire.appendChild(s);
+
+    const n = 14; // số ngọn lửa mỗi bên
+    // Bên phải: từ đáy (180°) lên đỉnh (0°)
+    // Bên trái: từ đáy (180°) lên đỉnh (360°)
+    for (let i = 0; i <= n; i++) {
+      const step = 180 / n;
+      const delay = (i / n) * 0.6;
+      const right = document.createElement("span");
+      right.style.setProperty("--a", 180 - i * step + "deg");
+      right.style.setProperty("--w", (14 + Math.random() * 6) + "px");
+      right.style.setProperty("--h", (70 + Math.random() * 25) + "px");
+      right.style.setProperty("--delay", delay + "s");
+      fire.appendChild(right);
+
+      const left = document.createElement("span");
+      left.style.setProperty("--a", 180 + i * step + "deg");
+      left.style.setProperty("--w", (14 + Math.random() * 6) + "px");
+      left.style.setProperty("--h", (70 + Math.random() * 25) + "px");
+      left.style.setProperty("--delay", delay + "s");
+      fire.appendChild(left);
     }
+
     avatarWrap.appendChild(fire);
-    setTimeout(() => fire.remove(), 2000);
+
+    clearTimeout(fireTimer);
+    fireTimer = setTimeout(() => {
+      fire.remove();
+      avatarWrap.classList.remove("lit");
+    }, 2000);
   });
 }
