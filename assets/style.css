@@ -130,6 +130,7 @@ body::before {
   filter: drop-shadow(0 0 8px var(--cyan)) drop-shadow(0 0 16px rgba(94,231,255,.6));
   animation: orbit-spin 5s linear infinite;
   z-index: 0;
+  transition: filter .4s ease;
 }
 @keyframes orbit-spin { to { transform: rotate(360deg); } }
 
@@ -144,14 +145,24 @@ body::before {
   background: #15151d;
   border: 2px solid rgba(255,255,255,.18);
   box-shadow: 0 0 20px rgba(94,231,255,.25);
+  transition: filter .4s ease, box-shadow .4s ease;
 }
 
-/* Ngọn lửa bừng lên bao quanh avatar khi bấm */
+/* Khi bấm: avatar sáng bóng và viền rực lên */
+.avatar-wrap.lit .avatar {
+  filter: brightness(1.35) saturate(1.2);
+  box-shadow: 0 0 24px #ffb347, 0 0 48px #ff2d75, 0 0 70px rgba(255,95,162,.6);
+}
+.avatar-wrap.lit::before {
+  filter: drop-shadow(0 0 10px #fff) drop-shadow(0 0 22px #ffe27a) drop-shadow(0 0 30px #ff2d75);
+}
+
+/* Lửa chạy từ đáy avatar lên hai bên theo viền */
 .fire {
   position: absolute;
   inset: -40px;
   pointer-events: none;
-  z-index: 2;
+  z-index: 3;
 }
 .fire span {
   position: absolute;
@@ -160,19 +171,18 @@ body::before {
   width: var(--w);
   height: var(--h);
   margin-left: calc(var(--w) / -2);
-  border-radius: 50% 50% 35% 35%;
-  background: linear-gradient(to top, #ff2d75, #ff8a3d 45%, #ffe27a 80%, transparent);
-  filter: blur(2px);
-  opacity: 0;
   transform-origin: 50% 100%;
-  animation: flame-burst 1.4s ease-out forwards;
+  border-radius: 50% 50% 20% 20% / 60% 60% 40% 40%;
+  background: linear-gradient(to top, #ff2d75, #ff8a3d 45%, #ffe27a 85%, #ffffff);
+  filter: blur(1.5px);
+  opacity: 0;
+  animation: flame-sweep .75s ease-out forwards;
   animation-delay: var(--delay);
-  transform: rotate(var(--a));
 }
-@keyframes flame-burst {
-  0%   { transform: rotate(var(--a)) translateY(0) scale(.3); opacity: 0; }
-  20%  { opacity: 1; }
-  100% { transform: rotate(var(--a)) translateY(calc(var(--r) * -1)) scale(1); opacity: 0; }
+@keyframes flame-sweep {
+  0%   { transform: rotate(var(--a)) scaleY(0); opacity: 0; }
+  25%  { opacity: 1; }
+  100% { transform: rotate(var(--a)) scaleY(1); opacity: 0; }
 }
 
 /* Chữ */
