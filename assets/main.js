@@ -37,7 +37,7 @@ if (particles) {
   }
 }
 
-// Bấm avatar: lửa bừng lên bao quanh avatar
+// Bấm hoặc chạm avatar: ngọn lửa bừng lên bao quanh
 const avatarWrap = document.querySelector(".avatar-wrap");
 if (avatarWrap) {
   avatarWrap.addEventListener("click", () => {
@@ -48,12 +48,13 @@ if (avatarWrap) {
       const s = document.createElement("span");
       const angle = (360 / tongues) * i + (Math.random() * 10 - 5);
       s.style.setProperty("--a", angle + "deg");
-      s.style.setProperty("--w", (14 + Math.random() * 10) + "px");
-      s.style.setProperty("--h", (40 + Math.random() * 30) + "px");
+      s.style.setProperty("--w", (14 + Math.random() * 12) + "px");
+      s.style.setProperty("--h", (50 + Math.random() * 40) + "px");
+      s.style.setProperty("--r", (70 + Math.random() * 40) + "px");
       s.style.setProperty("--delay", (Math.random() * 0.25) + "s");
       fire.appendChild(s);
     }
     avatarWrap.appendChild(fire);
-    setTimeout(() => fire.remove(), 1600);
+    setTimeout(() => fire.remove(), 2000);
   });
 }
