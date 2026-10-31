@@ -65,7 +65,9 @@ if (bg && !prefersReduce) {
   }
 
   const moteCount = Math.round(Math.min(W < 600 ? 40 : 70, (W * H) / 20000));
-  for (let i = 0; i < moteCount; i++) motes.push(newMote(false));
+  const motes2 = [];
+  for (let i = 0; i < moteCount; i++) motes2.push(newMote(false));
+  motes2.forEach((m) => motes.push(m));
 
   function spark(x, y) {
     motes.push({
@@ -155,8 +157,56 @@ if (card && canFine) {
   });
 }
 
-// ===== Bấm avatar: lửa chạy từ đáy, hai bên viền, lên đỉnh =====
+// ===== Avatar: hạt lấp lánh chạy theo đầu dải vầng sáng =====
 const avatarWrap = document.querySelector(".avatar-wrap");
+if (avatarWrap && !prefersReduce) {
+  const orbitCanvas = document.createElement("canvas");
+  orbitCanvas.width = 210 * DPR;
+  orbitCanvas.height = 210 * DPR;
+  orbitCanvas.style.cssText =
+    "position:absolute;left:-30px;top:-30px;width:210px;height:210px;pointer-events:none;z-index:2;";
+  avatarWrap.appendChild(orbitCanvas);
+
+  const octx = orbitCanvas.getContext("2d");
+  octx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const OC = 105;   // tâm canvas (px)
+  const OR = 80;    // bán kính đường hạt
+  const sparkSprite = makeSprite("#ffffff", 32);
+  const sparks = [];
+  const SPEED = (2 * Math.PI) / 5000; // một vòng mỗi 5 giây, khớp với CSS
+
+  function drawSparks(now) {
+    octx.clearRect(0, 0, 210, 210);
+    octx.globalCompositeOperation = "lighter";
+    const headAngle = (now * SPEED) % (2 * Math.PI);
+
+    for (let k = 0; k < 2; k++) {
+      sparks.push({
+        a: headAngle - Math.random() * 0.25,
+        r: OR + (Math.random() - 0.5) * 6,
+        life: 1,
+        size: 4 + Math.random() * 5,
+      });
+    }
+
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const p = sparks[i];
+      p.life -= 0.03;
+      if (p.life <= 0) { sparks.splice(i, 1); continue; }
+      const x = OC + Math.cos(p.a) * p.r;
+      const y = OC + Math.sin(p.a) * p.r;
+      octx.globalAlpha = p.life;
+      octx.drawImage(sparkSprite, x - p.size / 2, y - p.size / 2, p.size, p.size);
+    }
+
+    octx.globalAlpha = 1;
+    octx.globalCompositeOperation = "source-over";
+    requestAnimationFrame(drawSparks);
+  }
+  requestAnimationFrame(drawSparks);
+}
+
+// ===== Bấm avatar: lửa chạy từ đáy, hai bên viền, lên đỉnh =====
 const fireCanvas = document.getElementById("fire");
 if (avatarWrap && fireCanvas && !prefersReduce) {
   const fctx = fireCanvas.getContext("2d");
@@ -165,7 +215,6 @@ if (avatarWrap && fireCanvas && !prefersReduce) {
   const R = 82;          // bán kính đường lửa quanh viền (px)
   const EMIT_MS = 1000;  // thời gian lửa chạy từ đáy lên đỉnh
   const LIFE_MS = 900;   // tuổi thọ mỗi hạt lửa
-  const GLOW_MS = 1000;  // thời gian viền sáng sau khi lửa dừng phát
 
   fireCanvas.width = FS * DPR;
   fireCanvas.height = FS * DPR;
@@ -178,7 +227,6 @@ if (avatarWrap && fireCanvas && !prefersReduce) {
   let burstStart = null;
   let running = false;
   let lastT = 0;
-  let glowTimer = null;
 
   function emit(progress) {
     [1, -1].forEach((side) => {
@@ -236,15 +284,12 @@ if (avatarWrap && fireCanvas && !prefersReduce) {
       requestAnimationFrame(loop);
     } else {
       running = false;
-      // Lửa đã tắt hẳn: tắt viền sáng ngay, không chờ thêm
       avatarWrap.classList.remove("lit");
     }
   }
 
   avatarWrap.addEventListener("click", () => {
-    // Bật sáng ngay (không chờ transition)
     avatarWrap.classList.add("lit");
-    clearTimeout(glowTimer);
 
     burstStart = performance.now();
     if (!running) {
