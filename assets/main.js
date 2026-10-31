@@ -23,7 +23,7 @@ function makeSprite(color, size = 64) {
   return c;
 }
 
-// ===== Nền nước gợn sóng (WebGL: nét, nhẹ, bấm vào đâu cũng gợn) =====
+// ===== Nền nước: chỉ gợn khi bấm vào nền (WebGL, nét) =====
 const waterCanvas = document.getElementById("water");
 const gl = waterCanvas && !prefersReduce
   ? waterCanvas.getContext("webgl", { antialias: false })
@@ -44,21 +44,15 @@ if (gl) {
     uniform vec2 uRes;      // kích thước khung nhìn (px CSS)
     uniform vec2 uImg;      // kích thước ảnh nền gốc
     uniform float uDpr;     // tỉ lệ pixel thiết bị
-    uniform float uTime;
     uniform vec2 uRipP[8];  // tâm các gợn do bấm
     uniform float uRipA[8]; // tuổi của mỗi gợn (giây), < 0 là không dùng
 
     void main() {
       // Tọa độ pixel CSS, gốc ở góc trên-trái
       vec2 p = vec2(gl_FragCoord.x / uDpr, uRes.y - gl_FragCoord.y / uDpr);
-      float t = uTime;
 
-      // Gợn nền rất nhẹ, luôn chuyển động
+      // Chỉ có gợn lan ra từ điểm bấm, không có gợn nền tự động
       vec2 d = vec2(0.0);
-      d += vec2(sin(p.y * 0.035 + t * 1.2), cos(p.x * 0.03 - t * 0.9)) * 0.9;
-      d += vec2(sin((p.x + p.y) * 0.02 - t * 0.7), 0.0) * 0.6;
-
-      // Gợn lan ra từ điểm bấm
       float hl = 0.0;
       for (int i = 0; i < 8; i++) {
         float age = uRipA[i];
@@ -66,7 +60,7 @@ if (gl) {
           vec2 v = p - uRipP[i];
           float r = length(v);
           vec2 dir = r > 0.001 ? v / r : vec2(0.0);
-          float dist = r - age * 180.0;             // vị trí đầu sóng, lan 180px/giây
+          float dist = r - age * 180.0;             // đầu sóng lan 180px/giây
           float env = exp(-dist * dist / 900.0) * exp(-age * 1.8);
           float w = sin(dist * 0.12);
           d += dir * w * env * 10.0;
@@ -74,10 +68,9 @@ if (gl) {
         }
       }
 
-      // Ánh sáng nhẹ ở đỉnh sóng
       vec2 q = p + d;
 
-      // Phủ ảnh kiểu "cover" (giữ tỉ lệ, lấp đầy màn hình)
+      // Phủ ảnh kiểu "cover"
       float s = max(uRes.x / uImg.x, uRes.y / uImg.y);
       vec2 off = (uRes - uImg * s) * 0.5;
       vec2 uv = (q - off) / (uImg * s);
@@ -102,7 +95,6 @@ if (gl) {
   gl.linkProgram(prog);
   gl.useProgram(prog);
 
-  // Một tam giác phủ toàn màn hình
   const buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
@@ -110,7 +102,6 @@ if (gl) {
   gl.enableVertexAttribArray(aPos);
   gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
 
-  // Texture ảnh nền
   const tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -121,7 +112,6 @@ if (gl) {
   const uRes = gl.getUniformLocation(prog, "uRes");
   const uImg = gl.getUniformLocation(prog, "uImg");
   const uDpr = gl.getUniformLocation(prog, "uDpr");
-  const uTime = gl.getUniformLocation(prog, "uTime");
   const uRipP = gl.getUniformLocation(prog, "uRipP");
   const uRipA = gl.getUniformLocation(prog, "uRipA");
 
@@ -129,6 +119,7 @@ if (gl) {
   const ripA = new Float32Array(8);
   let ripples = []; // { x, y, t0 }
   let imgReady = false;
+  let needsDraw = true; // vẽ lại khi có gợn mới, không vẽ liên tục khi đứng yên
 
   const img = new Image();
   img.onload = () => {
@@ -136,6 +127,7 @@ if (gl) {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
     gl.uniform2f(uImg, img.width, img.height);
     imgReady = true;
+    needsDraw = true;
   };
   img.src = "assets/background.jpg";
 
@@ -147,6 +139,7 @@ if (gl) {
     gl.viewport(0, 0, waterCanvas.width, waterCanvas.height);
     gl.uniform2f(uRes, W, H);
     gl.uniform1f(uDpr, waterCanvas.width / W);
+    needsDraw = true;
   }
   resize();
   window.addEventListener("resize", resize);
@@ -156,25 +149,28 @@ if (gl) {
     if (e.target.closest && e.target.closest(".card-wrap")) return;
     ripples.push({ x: e.clientX, y: e.clientY, t0: performance.now() / 1000 });
     if (ripples.length > 8) ripples.shift();
+    needsDraw = true;
   });
 
   function render(nowMs) {
     const now = nowMs / 1000;
     ripples = ripples.filter((r) => now - r.t0 < 6);
 
-    ripP.fill(0);
-    ripA.fill(-1);
-    ripples.forEach((r, i) => {
-      ripP[i * 2] = r.x;
-      ripP[i * 2 + 1] = r.y;
-      ripA[i] = now - r.t0;
-    });
+    // Chỉ vẽ khi còn gợn đang chạy, tiết kiệm pin
+    if (ripples.length) needsDraw = true;
 
-    if (imgReady) {
-      gl.uniform1f(uTime, now);
+    if (imgReady && needsDraw) {
+      ripP.fill(0);
+      ripA.fill(-1);
+      ripples.forEach((r, i) => {
+        ripP[i * 2] = r.x;
+        ripP[i * 2 + 1] = r.y;
+        ripA[i] = now - r.t0;
+      });
       gl.uniform2fv(uRipP, ripP);
       gl.uniform1fv(uRipA, ripA);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
+      needsDraw = ripples.length > 0;
     }
     requestAnimationFrame(render);
   }
