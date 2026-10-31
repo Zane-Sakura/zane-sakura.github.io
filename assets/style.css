@@ -6,6 +6,7 @@
   --pink: #ff5fa2;
   --purple: #b57bff;
   --cyan: #5ee7ff;
+  --glow: 0;
 }
 
 * { box-sizing: border-box; }
@@ -118,7 +119,7 @@ body::before {
   filter: drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 0 14px rgba(94,231,255,.7));
   animation: orbit-spin 5s linear infinite;
   z-index: 0;
-  transition: filter .15s ease;
+  opacity: calc(.6 + var(--glow) * .4);
 }
 
 /* Lớp hào quang mờ lớn, quay ngược chiều */
@@ -145,6 +146,7 @@ body::before {
 @keyframes orbit-spin     { to { transform: rotate(360deg); } }
 @keyframes orbit-spin-rev { to { transform: rotate(-360deg); } }
 
+/* Ảnh avatar: độ sáng và viền phát sáng được JS điều khiển qua --glow (0 → 1) */
 .avatar {
   position: relative;
   z-index: 1;
@@ -155,17 +157,11 @@ body::before {
   object-fit: cover;
   background: #15151d;
   border: 2px solid rgba(255,255,255,.18);
-  box-shadow: 0 0 20px rgba(94,231,255,.25);
-  transition: filter .15s ease, box-shadow .15s ease;
-}
-
-/* Khi bấm: avatar sáng bóng và viền rực lên */
-.avatar-wrap.lit .avatar {
-  filter: brightness(1.35) saturate(1.2);
-  box-shadow: 0 0 24px #ffb347, 0 0 48px #ff2d75, 0 0 70px rgba(255,95,162,.6);
-}
-.avatar-wrap.lit::before {
-  filter: drop-shadow(0 0 10px #fff) drop-shadow(0 0 22px #ffe27a) drop-shadow(0 0 30px #ff2d75);
+  filter: brightness(calc(1 + var(--glow) * .35)) saturate(calc(1 + var(--glow) * .2));
+  box-shadow:
+    0 0 20px rgba(94,231,255,.25),
+    0 0 calc(20px + var(--glow) * 30px) rgba(255,179,71,calc(var(--glow) * .9)),
+    0 0 calc(var(--glow) * 60px) rgba(255,45,117,calc(var(--glow) * .6));
 }
 
 /* Canvas lửa: lớn hơn avatar, căn giữa với avatar */
