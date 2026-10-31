@@ -115,7 +115,7 @@ body::before {
   filter: drop-shadow(0 0 8px var(--cyan)) drop-shadow(0 0 16px rgba(94,231,255,.6));
   animation: orbit-spin 5s linear infinite;
   z-index: 0;
-  transition: filter .15s ease;  
+  transition: filter .4s ease;  
 }
 @keyframes orbit-spin { to { transform: rotate(360deg); } }
 
@@ -130,12 +130,12 @@ body::before {
   background: #15151d;
   border: 2px solid rgba(255,255,255,.18);
   box-shadow: 0 0 20px rgba(94,231,255,.25);
-  transition: filter .15s ease, box-shadow .15s ease; 
+  transition: filter .4s ease, box-shadow .4s ease; 
 }
 
 /* Khi bấm: avatar sáng bóng và viền rực lên */
 .avatar-wrap.lit .avatar {
-  filter: brightness(1.35) saturate(1.2);
+  filter: brightness(1.35) saturate(1);
   box-shadow: 0 0 24px #ffb347, 0 0 48px #ff2d75, 0 0 70px rgba(255,95,162,.6);
 }
 .avatar-wrap.lit::before {
