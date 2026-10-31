@@ -214,7 +214,7 @@ if (avatarWrap && fireCanvas && !prefersReduce) {
   const EMIT_MS = 1000;
   const LIFE_MS = 900;
   const GLOW_UP = 0.12;    // tốc độ sáng lên (mỗi khung hình)
-  const GLOW_DOWN = 0.035; // tốc độ tắt (mỗi khung hình), chậm hơn để mượt
+  const GLOW_DOWN = 0.06; // tốc độ tắt (mỗi khung hình), đã tăng để tắt sớm hơn
 
   fireCanvas.width = FS * DPR;
   fireCanvas.height = FS * DPR;
