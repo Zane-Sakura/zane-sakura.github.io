@@ -65,9 +65,7 @@ if (bg && !prefersReduce) {
   }
 
   const moteCount = Math.round(Math.min(W < 600 ? 40 : 70, (W * H) / 20000));
-  const motes2 = [];
-  for (let i = 0; i < moteCount; i++) motes2.push(newMote(false));
-  motes2.forEach((m) => motes.push(m));
+  for (let i = 0; i < moteCount; i++) motes.push(newMote(false));
 
   function spark(x, y) {
     motes.push({
@@ -210,11 +208,13 @@ if (avatarWrap && !prefersReduce) {
 const fireCanvas = document.getElementById("fire");
 if (avatarWrap && fireCanvas && !prefersReduce) {
   const fctx = fireCanvas.getContext("2d");
-  const FS = 270;        // kích thước canvas lửa (px)
-  const C = FS / 2;      // tâm canvas
-  const R = 82;          // bán kính đường lửa quanh viền (px)
-  const EMIT_MS = 1000;  // thời gian lửa chạy từ đáy lên đỉnh
-  const LIFE_MS = 900;   // tuổi thọ mỗi hạt lửa
+  const FS = 270;
+  const C = FS / 2;
+  const R = 82;
+  const EMIT_MS = 1000;
+  const LIFE_MS = 900;
+  const GLOW_UP = 0.12;    // tốc độ sáng lên (mỗi khung hình)
+  const GLOW_DOWN = 0.035; // tốc độ tắt (mỗi khung hình), chậm hơn để mượt
 
   fireCanvas.width = FS * DPR;
   fireCanvas.height = FS * DPR;
@@ -227,6 +227,14 @@ if (avatarWrap && fireCanvas && !prefersReduce) {
   let burstStart = null;
   let running = false;
   let lastT = 0;
+  let glow = 0;
+  let glowTarget = 0;
+
+  function setGlow(v) {
+    glow = v;
+    avatarWrap.style.setProperty("--glow", v.toFixed(3));
+    avatarWrap.classList.toggle("lit", v > 0.01);
+  }
 
   function emit(progress) {
     [1, -1].forEach((side) => {
@@ -280,17 +288,20 @@ if (avatarWrap && fireCanvas && !prefersReduce) {
     fctx.globalAlpha = 1;
     fctx.globalCompositeOperation = "source-over";
 
-    if (burstStart !== null || flames.length) {
+    // Viền sáng: lên nhanh khi đang phát lửa, tắt dần mượt khi lửa hết
+    glowTarget = burstStart !== null ? 1 : 0;
+    const step = glowTarget > glow ? GLOW_UP : GLOW_DOWN;
+    const next = glow + (glowTarget - glow) * step;
+    setGlow(Math.abs(next - glowTarget) < 0.005 ? glowTarget : next);
+
+    if (burstStart !== null || flames.length || glow > 0) {
       requestAnimationFrame(loop);
     } else {
       running = false;
-      avatarWrap.classList.remove("lit");
     }
   }
 
   avatarWrap.addEventListener("click", () => {
-    avatarWrap.classList.add("lit");
-
     burstStart = performance.now();
     if (!running) {
       running = true;
