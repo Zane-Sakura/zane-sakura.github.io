@@ -14,6 +14,7 @@
 </head>
 <body>
   <div id="particles" aria-hidden="true"></div>
+  <div id="trail" aria-hidden="true"></div>
 
   <main class="card-wrap">
     <div class="profile">
@@ -23,7 +24,7 @@
 
       <h1 class="name">Duy Trường</h1>
       <p class="nick">@Zane Sakura</p>
-      <p class="bio">Artist &amp; Coder &amp; Lập trình viên Game</p>
+      <p class="bio"><span id="typed"></span><span class="caret">|</span></p>
       <p class="tag">✦ Admin Server BloodMoon FDG ✦</p>
     </div>
 
@@ -40,7 +41,11 @@
       </a>
     </nav>
 
-    <footer class="foot">© <span id="year"></span> Duy Trường · Zane Sakura</footer>
+    <footer class="foot">
+      © <span id="year"></span> Duy Trường · Zane Sakura
+      <br>
+      <span id="days"></span>
+    </footer>
   </main>
 
   <script src="assets/main.js" defer></script>
