@@ -165,12 +165,12 @@ if (avatarWrap && fireCanvas && !prefersReduce) {
   const R = 82;          // bán kính đường lửa quanh viền (px)
   const EMIT_MS = 1000;  // thời gian lửa chạy từ đáy lên đỉnh
   const LIFE_MS = 900;   // tuổi thọ mỗi hạt lửa
+  const GLOW_MS = 1000;  // thời gian viền sáng sau khi lửa dừng phát
 
   fireCanvas.width = FS * DPR;
   fireCanvas.height = FS * DPR;
   fctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 
-  // Màu lửa theo tuổi: trắng nóng → vàng → cam → đỏ
   const flameSprites = ["#ffffff", "#ffe27a", "#ff8a3d", "#ff2d75"]
     .map((c) => makeSprite(c, 64));
 
@@ -178,9 +178,8 @@ if (avatarWrap && fireCanvas && !prefersReduce) {
   let burstStart = null;
   let running = false;
   let lastT = 0;
-  let fireTimer = null;
+  let glowTimer = null;
 
-  // progress: 0 (đáy) → 1 (đỉnh). Bên phải và bên trái đi cùng lúc
   function emit(progress) {
     [1, -1].forEach((side) => {
       const a = Math.PI / 2 - side * progress * Math.PI;
@@ -221,9 +220,9 @@ if (avatarWrap && fireCanvas && !prefersReduce) {
 
       f.x += f.vx * k;
       f.y += f.vy * k;
-      f.vy -= 0.02 * k; // lửa bốc lên
+      f.vy -= 0.02 * k;
 
-      const t = f.age / f.life; // 0 → 1
+      const t = f.age / f.life;
       const idx = Math.min(flameSprites.length - 1, Math.floor(t * flameSprites.length));
       const s = f.size * (1 + t * 0.8) * (1 - t * 0.5);
       fctx.globalAlpha = Math.min(1, (1 - t) * 1.6);
@@ -237,13 +236,15 @@ if (avatarWrap && fireCanvas && !prefersReduce) {
       requestAnimationFrame(loop);
     } else {
       running = false;
+      // Lửa đã tắt hẳn: tắt viền sáng ngay, không chờ thêm
+      avatarWrap.classList.remove("lit");
     }
   }
 
   avatarWrap.addEventListener("click", () => {
-    avatarWrap.classList.remove("lit");
-    void avatarWrap.offsetWidth; // ép trình duyệt chạy lại hiệu ứng sáng
+    // Bật sáng ngay (không chờ transition)
     avatarWrap.classList.add("lit");
+    clearTimeout(glowTimer);
 
     burstStart = performance.now();
     if (!running) {
@@ -251,8 +252,5 @@ if (avatarWrap && fireCanvas && !prefersReduce) {
       lastT = performance.now();
       requestAnimationFrame(loop);
     }
-
-    clearTimeout(fireTimer);
-    fireTimer = setTimeout(() => avatarWrap.classList.remove("lit"), 2000);
   });
 }
