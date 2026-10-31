@@ -37,22 +37,23 @@ if (particles) {
   }
 }
 
-// Bấm avatar: ngọn lửa bùng lên từ dưới
+// Bấm avatar: lửa bừng lên bao quanh avatar
 const avatarWrap = document.querySelector(".avatar-wrap");
 if (avatarWrap) {
   avatarWrap.addEventListener("click", () => {
     const fire = document.createElement("div");
     fire.className = "fire";
-    for (let i = 0; i < 22; i++) {
+    const tongues = 28;
+    for (let i = 0; i < tongues; i++) {
       const s = document.createElement("span");
-      s.style.setProperty("--w", (24 + Math.random() * 26) + "px");
-      s.style.setProperty("--h", (90 + Math.random() * 110) + "px");
-      s.style.left = Math.random() * 100 + "%";
-      s.style.setProperty("--dx", (Math.random() * 40 - 20) + "px");
-      s.style.setProperty("--delay", (Math.random() * 0.35) + "s");
+      const angle = (360 / tongues) * i + (Math.random() * 10 - 5);
+      s.style.setProperty("--a", angle + "deg");
+      s.style.setProperty("--w", (14 + Math.random() * 10) + "px");
+      s.style.setProperty("--h", (40 + Math.random() * 30) + "px");
+      s.style.setProperty("--delay", (Math.random() * 0.25) + "s");
       fire.appendChild(s);
     }
     avatarWrap.appendChild(fire);
-    setTimeout(() => fire.remove(), 2000);
+    setTimeout(() => fire.remove(), 1600);
   });
 }
