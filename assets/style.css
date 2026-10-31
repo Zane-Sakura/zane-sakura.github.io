@@ -115,7 +115,7 @@ body::before {
   filter: drop-shadow(0 0 8px var(--cyan)) drop-shadow(0 0 16px rgba(94,231,255,.6));
   animation: orbit-spin 5s linear infinite;
   z-index: 0;
-  transition: filter .4s ease;
+  transition: filter .15s ease;  
 }
 @keyframes orbit-spin { to { transform: rotate(360deg); } }
 
@@ -130,7 +130,7 @@ body::before {
   background: #15151d;
   border: 2px solid rgba(255,255,255,.18);
   box-shadow: 0 0 20px rgba(94,231,255,.25);
-  transition: filter .4s ease, box-shadow .4s ease;
+  transition: filter .15s ease, box-shadow .15s ease; 
 }
 
 /* Khi bấm: avatar sáng bóng và viền rực lên */
