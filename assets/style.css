@@ -95,6 +95,9 @@ body::before {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   isolation: isolate;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Dải vầng sáng chính quay quanh viền */
@@ -120,6 +123,7 @@ body::before {
   animation: orbit-spin 5s linear infinite;
   z-index: 0;
   opacity: calc(.6 + var(--glow) * .4);
+  pointer-events: none;
 }
 
 /* Lớp hào quang mờ lớn, quay ngược chiều */
@@ -162,6 +166,7 @@ body::before {
     0 0 20px rgba(94,231,255,.25),
     0 0 calc(20px + var(--glow) * 30px) rgba(255,179,71,calc(var(--glow) * .9)),
     0 0 calc(var(--glow) * 60px) rgba(255,45,117,calc(var(--glow) * .6));
+  pointer-events: none;
 }
 
 /* Canvas lửa: lớn hơn avatar, căn giữa với avatar */
@@ -258,11 +263,9 @@ body::before {
   border-radius: 12px;
   background: linear-gradient(135deg, var(--pink), var(--purple));
   color: #fff;
-  font-family: "Orbitron", sans-serif;
-  font-weight: 900;
-  font-size: 1.1rem;
   box-shadow: 0 6px 16px rgba(181,123,255,.4);
 }
+.link-btn .icon svg { display: block; }
 .link-btn .label { font-size: 1rem; letter-spacing: .02em; }
 .link-btn .arrow {
   color: var(--cyan);
@@ -291,16 +294,4 @@ body::before {
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
-}
-/* Lớp trang trí không nhận chạm, để chạm xuyên xuống avatar */
-.avatar-wrap::before,
-.avatar-wrap::after,
-.fire,
-.avatar-wrap canvas {
-  pointer-events: none;
-}
-.avatar-wrap {
-  touch-action: manipulation;
-  -webkit-user-select: none;
-  user-select: none;
 }
