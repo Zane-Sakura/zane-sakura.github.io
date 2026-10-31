@@ -17,22 +17,21 @@ document.querySelectorAll(".link-btn").forEach((btn) => {
   });
 });
 
-// Sao chổi bay nền
+// Hạt tròn bay lên nền
 const particles = document.getElementById("particles");
 if (particles) {
-  const colors = ["#ff5fa2", "#b57bff", "#5ee7ff", "#ffe27a"];
-  const count = window.innerWidth < 600 ? 14 : 24;
+  const colors = ["#ff5fa2", "#b57bff", "#5ee7ff", "#ffffff"];
+  const count = window.innerWidth < 600 ? 25 : 45;
   for (let i = 0; i < count; i++) {
     const p = document.createElement("span");
     p.className = "particle";
-    p.style.setProperty("--w", (6 + Math.random() * 14) + "px");
-    p.style.setProperty("--h", (90 + Math.random() * 120) + "px");
+    const size = 2 + Math.random() * 4;
+    p.style.width = p.style.height = size + "px";
     p.style.left = Math.random() * 100 + "vw";
     p.style.setProperty("--c", colors[i % colors.length]);
-    p.style.setProperty("--o", (0.6 + Math.random() * 0.4).toFixed(2));
-    p.style.setProperty("--x", (Math.random() * 160 - 80) + "px");
-    p.style.setProperty("--a", (Math.random() * 30 - 15) + "deg");
-    p.style.setProperty("--d", (7 + Math.random() * 8) + "s");
+    p.style.setProperty("--o", (0.5 + Math.random() * 0.5).toFixed(2));
+    p.style.setProperty("--x", (Math.random() * 60 - 30) + "px");
+    p.style.setProperty("--d", (8 + Math.random() * 10) + "s");
     p.style.setProperty("--delay", (-Math.random() * 15) + "s");
     particles.appendChild(p);
   }
@@ -44,8 +43,7 @@ if (avatarWrap) {
   avatarWrap.addEventListener("click", () => {
     const fire = document.createElement("div");
     fire.className = "fire";
-    const tongues = 22;
-    for (let i = 0; i < tongues; i++) {
+    for (let i = 0; i < 22; i++) {
       const s = document.createElement("span");
       s.style.setProperty("--w", (24 + Math.random() * 26) + "px");
       s.style.setProperty("--h", (90 + Math.random() * 110) + "px");
