@@ -167,8 +167,8 @@ if (avatarWrap && !prefersReduce) {
 
   const octx = orbitCanvas.getContext("2d");
   octx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  const OC = 105;   // tâm canvas (px)
-  const OR = 80;    // bán kính đường hạt
+  const OC = 105;
+  const OR = 80;
   const sparkSprite = makeSprite("#ffffff", 32);
   const sparks = [];
   const SPEED = (2 * Math.PI) / 5000; // một vòng mỗi 5 giây, khớp với CSS
@@ -206,15 +206,15 @@ if (avatarWrap && !prefersReduce) {
 
 // ===== Bấm avatar: lửa chạy từ đáy, hai bên viền, lên đỉnh =====
 const fireCanvas = document.getElementById("fire");
-if (avatarWrap && fireCanvas && !prefersReduce) {
+if (avatarWrap && fireCanvas) {
   const fctx = fireCanvas.getContext("2d");
   const FS = 270;
   const C = FS / 2;
   const R = 82;
   const EMIT_MS = 1000;
   const LIFE_MS = 900;
-  const GLOW_UP = 0.12;    // tốc độ sáng lên (mỗi khung hình)
-  const GLOW_DOWN = 0.06; // tốc độ tắt (mỗi khung hình), đã tăng để tắt sớm hơn
+  const GLOW_UP = 0.12;
+  const GLOW_DOWN = 0.06;
 
   fireCanvas.width = FS * DPR;
   fireCanvas.height = FS * DPR;
@@ -288,7 +288,6 @@ if (avatarWrap && fireCanvas && !prefersReduce) {
     fctx.globalAlpha = 1;
     fctx.globalCompositeOperation = "source-over";
 
-    // Viền sáng: lên nhanh khi đang phát lửa, tắt dần mượt khi lửa hết
     glowTarget = burstStart !== null ? 1 : 0;
     const step = glowTarget > glow ? GLOW_UP : GLOW_DOWN;
     const next = glow + (glowTarget - glow) * step;
@@ -301,7 +300,8 @@ if (avatarWrap && fireCanvas && !prefersReduce) {
     }
   }
 
-  avatarWrap.addEventListener("click", () => {
+  // pointerdown hoạt động với chuột, cảm ứng và bút trên mọi thiết bị
+  avatarWrap.addEventListener("pointerdown", () => {
     burstStart = performance.now();
     if (!running) {
       running = true;
