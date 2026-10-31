@@ -35,7 +35,7 @@ body::before {
   z-index: -2;
 }
 
-/* Hạt bay nền */
+/* Vùng chứa sao chổi nền */
 #particles {
   position: fixed;
   inset: 0;
@@ -43,22 +43,24 @@ body::before {
   pointer-events: none;
   overflow: hidden;
 }
+
+/* Sao chổi: đầu nhọn sáng, đuôi rộng dần và mờ */
 .particle {
   position: absolute;
-  bottom: -20px;
-  border-radius: 50%;
-  background: var(--c);
-  box-shadow: 0 0 8px var(--c), 0 0 16px var(--c);
+  bottom: -160px;
+  width: var(--w);
+  height: var(--h);
+  background: linear-gradient(to top, rgba(0,0,0,0) 0%, var(--c) 35%, #ffffff 100%);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
   opacity: 0;
-  animation: float var(--d) linear infinite;
+  animation: comet var(--d) linear infinite;
   animation-delay: var(--delay);
 }
-@keyframes float {
-  0%   { transform: translate(0, 0) scale(.6); opacity: 0; }
+@keyframes comet {
+  0%   { transform: translate(0, 0) rotate(var(--a)); opacity: 0; }
   10%  { opacity: var(--o); }
-  50%  { transform: translate(var(--x), -50vh) scale(1); }
   90%  { opacity: var(--o); }
-  100% { transform: translate(calc(var(--x) * -1), -110vh) scale(.6); opacity: 0; }
+  100% { transform: translate(var(--x), -115vh) rotate(var(--a)); opacity: 0; }
 }
 
 /* Khung chính, có vệt sáng quét mỗi 10s */
@@ -104,6 +106,7 @@ body::before {
   width: 150px;
   height: 150px;
   margin: 0 auto 1.4rem;
+  cursor: pointer;
 }
 .avatar-wrap::before {
   content: "";
@@ -136,6 +139,34 @@ body::before {
   background: #15151d;
   border: 2px solid rgba(255,255,255,.18);
   box-shadow: 0 0 20px rgba(94,231,255,.25);
+}
+
+/* Ngọn lửa bùng lên khi bấm avatar */
+.fire {
+  position: absolute;
+  left: -50px;
+  right: -50px;
+  bottom: -20px;
+  height: 230px;
+  pointer-events: none;
+  z-index: 2;
+}
+.fire span {
+  position: absolute;
+  bottom: 0;
+  width: var(--w);
+  height: var(--h);
+  border-radius: 50% 50% 35% 35%;
+  background: linear-gradient(to top, #ff2d75, #ff8a3d 45%, #ffe27a 80%, transparent);
+  filter: blur(2px);
+  opacity: 0;
+  animation: flame-rise 1.4s ease-out forwards;
+  animation-delay: var(--delay);
+}
+@keyframes flame-rise {
+  0%   { transform: translate(0, 0) scaleY(.3); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translate(var(--dx), calc(var(--h) * -1.4)) scaleY(1); opacity: 0; }
 }
 
 /* Chữ */
