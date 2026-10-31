@@ -35,7 +35,7 @@ body::before {
   z-index: -2;
 }
 
-/* Vùng chứa hạt bay nền */
+/* Hạt nền bay lên */
 #particles {
   position: fixed;
   inset: 0;
@@ -43,8 +43,6 @@ body::before {
   pointer-events: none;
   overflow: hidden;
 }
-
-/* Hạt tròn bay lên */
 .particle {
   position: absolute;
   bottom: -20px;
@@ -63,7 +61,27 @@ body::before {
   100% { transform: translate(calc(var(--x) * -1), -110vh) scale(.6); opacity: 0; }
 }
 
-/* Khung chính, có vệt sáng quét mỗi 10s */
+/* Vệt hạt theo con trỏ chuột */
+#trail {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+}
+.trail-dot {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 8px var(--c);
+  transform: translate(-50%, -50%);
+  animation: trail-fade .7s ease-out forwards;
+}
+@keyframes trail-fade {
+  to { opacity: 0; transform: translate(-50%, -50%) scale(.2); }
+}
+
+/* Khung chính: vệt sáng quét và nghiêng 3D theo chuột */
 .card-wrap {
   position: relative;
   overflow: hidden;
@@ -77,6 +95,9 @@ body::before {
   -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 25px 70px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08);
   animation: rise .9s cubic-bezier(.2,.8,.2,1) both;
+  transform-style: preserve-3d;
+  transition: transform .2s ease-out;
+  will-change: transform;
 }
 .card-wrap::after {
   content: "";
@@ -100,7 +121,7 @@ body::before {
   to   { opacity: 1; transform: none; }
 }
 
-/* Avatar đứng yên, vệt sáng dày chạy quanh mỗi 5s */
+/* Avatar */
 .avatar-wrap {
   position: relative;
   width: 150px;
@@ -211,7 +232,16 @@ body::before {
   font-weight: 600;
   font-size: 1.05rem;
   margin: 0;
+  min-height: 1.6em;
 }
+.caret {
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--cyan);
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
 .tag {
   color: var(--pink);
   font-size: .9rem;
