@@ -1,8 +1,13 @@
+// ===== Cài đặt chung =====
+const prefersReduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const canFine = matchMedia("(pointer: fine)").matches;
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
 // Năm ở footer
 const yearEl = document.getElementById("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-// Đếm ngày đã làm server (đổi ngày này thành ngày bạn muốn, định dạng YYYY-MM-DD)
+// Đếm ngày đã làm server (đổi ngày này, định dạng YYYY-MM-DD)
 const startDate = new Date("2024-01-01");
 const daysEl = document.getElementById("days");
 if (daysEl) {
@@ -10,7 +15,118 @@ if (daysEl) {
   daysEl.textContent = `Đã đồng hành cùng server được ${days} ngày`;
 }
 
-// Gợn sóng khi bấm nút liên kết
+// Tạo đốm sáng mềm (sprite) để vẽ nhanh bằng drawImage
+function makeSprite(color, size = 64) {
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const g = c.getContext("2d");
+  const r = size / 2;
+  const grad = g.createRadialGradient(r, r, 0, r, r, r);
+  grad.addColorStop(0, "rgba(255,255,255,1)");
+  grad.addColorStop(0.2, color);
+  grad.addColorStop(0.6, color + "55");
+  grad.addColorStop(1, "rgba(0,0,0,0)");
+  g.fillStyle = grad;
+  g.fillRect(0, 0, size, size);
+  return c;
+}
+
+// ===== Canvas nền: hạt bay lên và đốm sáng theo chuột =====
+const bg = document.getElementById("bg");
+if (bg && !prefersReduce) {
+  const ctx = bg.getContext("2d");
+  const palette = ["#ff5fa2", "#b57bff", "#5ee7ff", "#ffe27a", "#ffffff"];
+  const sprites = palette.map((c) => makeSprite(c));
+  const motes = [];
+  let W = 0, H = 0;
+
+  function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    bg.width = W * DPR;
+    bg.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  function newMote(fromBottom) {
+    return {
+      kind: "mote",
+      x: Math.random() * W,
+      y: fromBottom ? H + 20 : Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: -(0.12 + Math.random() * 0.3),
+      size: 6 + Math.random() * 12,
+      alpha: 0.35 + Math.random() * 0.5,
+      sprite: sprites[Math.floor(Math.random() * sprites.length)],
+      phase: Math.random() * Math.PI * 2,
+    };
+  }
+
+  const moteCount = Math.round(Math.min(W < 600 ? 40 : 70, (W * H) / 20000));
+  for (let i = 0; i < moteCount; i++) motes.push(newMote(false));
+
+  function spark(x, y) {
+    motes.push({
+      kind: "spark",
+      x, y,
+      vx: (Math.random() - 0.5) * 1.2,
+      vy: (Math.random() - 0.5) * 1.2 - 0.3,
+      size: 6 + Math.random() * 6,
+      life: 1,
+      sprite: sprites[Math.floor(Math.random() * sprites.length)],
+    });
+  }
+
+  if (canFine) {
+    let lastSpark = 0;
+    window.addEventListener("pointermove", (e) => {
+      const now = performance.now();
+      if (now - lastSpark < 30) return;
+      lastSpark = now;
+      spark(e.clientX, e.clientY);
+    });
+  }
+
+  let last = performance.now();
+  function frame(now) {
+    const k = Math.min((now - last) / 16.67, 3);
+    last = now;
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = "lighter";
+
+    for (let i = motes.length - 1; i >= 0; i--) {
+      const m = motes[i];
+      if (m.kind === "spark") {
+        m.x += m.vx * k;
+        m.y += m.vy * k;
+        m.vy += 0.02 * k;
+        m.life -= 0.025 * k;
+        if (m.life <= 0) { motes.splice(i, 1); continue; }
+        const s = m.size * (0.4 + m.life * 0.6);
+        ctx.globalAlpha = m.life;
+        ctx.drawImage(m.sprite, m.x - s / 2, m.y - s / 2, s, s);
+      } else {
+        m.x += (m.vx + Math.sin(now / 1200 + m.phase) * 0.15) * k;
+        m.y += m.vy * k;
+        if (m.y < -30) Object.assign(m, newMote(true));
+        if (m.x < -30) m.x = W + 30;
+        else if (m.x > W + 30) m.x = -30;
+        const twinkle = 0.7 + 0.3 * Math.sin(now / 400 + m.phase);
+        ctx.globalAlpha = m.alpha * twinkle;
+        ctx.drawImage(m.sprite, m.x - m.size / 2, m.y - m.size / 2, m.size, m.size);
+      }
+    }
+
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "source-over";
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+// ===== Gợn sóng khi bấm nút liên kết =====
 document.querySelectorAll(".link-btn").forEach((btn) => {
   btn.addEventListener("click", (e) => {
     const rect = btn.getBoundingClientRect();
@@ -25,48 +141,7 @@ document.querySelectorAll(".link-btn").forEach((btn) => {
   });
 });
 
-// Hạt nền bay lên
-const particles = document.getElementById("particles");
-if (particles) {
-  const colors = ["#ff5fa2", "#b57bff", "#5ee7ff", "#ffffff"];
-  const count = window.innerWidth < 600 ? 25 : 45;
-  for (let i = 0; i < count; i++) {
-    const p = document.createElement("span");
-    p.className = "particle";
-    const size = 2 + Math.random() * 4;
-    p.style.width = p.style.height = size + "px";
-    p.style.left = Math.random() * 100 + "vw";
-    p.style.setProperty("--c", colors[i % colors.length]);
-    p.style.setProperty("--o", (0.5 + Math.random() * 0.5).toFixed(2));
-    p.style.setProperty("--x", (Math.random() * 60 - 30) + "px");
-    p.style.setProperty("--d", (8 + Math.random() * 10) + "s");
-    p.style.setProperty("--delay", (-Math.random() * 15) + "s");
-    particles.appendChild(p);
-  }
-}
-
-// Vệt hạt theo con trỏ (chỉ trên máy tính)
-const trail = document.getElementById("trail");
-const canFine = matchMedia("(pointer: fine)").matches;
-if (trail && canFine) {
-  let last = 0;
-  document.addEventListener("pointermove", (e) => {
-    const now = Date.now();
-    if (now - last < 40) return;
-    last = now;
-    const dot = document.createElement("span");
-    dot.className = "trail-dot";
-    const size = 4 + Math.random() * 4;
-    dot.style.width = dot.style.height = size + "px";
-    dot.style.left = e.clientX + "px";
-    dot.style.top = e.clientY + "px";
-    dot.style.setProperty("--c", ["#ff5fa2", "#5ee7ff", "#b57bff"][Math.floor(Math.random() * 3)]);
-    trail.appendChild(dot);
-    setTimeout(() => dot.remove(), 700);
-  });
-}
-
-// Nghiêng 3D khung theo chuột (chỉ trên máy tính)
+// ===== Nghiêng 3D khung theo chuột (chỉ máy tính) =====
 const card = document.querySelector(".card-wrap");
 if (card && canFine) {
   card.addEventListener("pointermove", (e) => {
@@ -80,47 +155,104 @@ if (card && canFine) {
   });
 }
 
-// Bấm hoặc chạm avatar: avatar sáng lên, lửa chạy từ đáy lên hai bên viền đến đỉnh
+// ===== Bấm avatar: lửa chạy từ đáy, hai bên viền, lên đỉnh =====
 const avatarWrap = document.querySelector(".avatar-wrap");
-if (avatarWrap) {
+const fireCanvas = document.getElementById("fire");
+if (avatarWrap && fireCanvas && !prefersReduce) {
+  const fctx = fireCanvas.getContext("2d");
+  const FS = 270;        // kích thước canvas lửa (px)
+  const C = FS / 2;      // tâm canvas
+  const R = 82;          // bán kính đường lửa quanh viền (px)
+  const EMIT_MS = 1000;  // thời gian lửa chạy từ đáy lên đỉnh
+  const LIFE_MS = 900;   // tuổi thọ mỗi hạt lửa
+
+  fireCanvas.width = FS * DPR;
+  fireCanvas.height = FS * DPR;
+  fctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  // Màu lửa theo tuổi: trắng nóng → vàng → cam → đỏ
+  const flameSprites = ["#ffffff", "#ffe27a", "#ff8a3d", "#ff2d75"]
+    .map((c) => makeSprite(c, 64));
+
+  let flames = [];
+  let burstStart = null;
+  let running = false;
+  let lastT = 0;
   let fireTimer = null;
-  const RING_RADIUS = 82; // bán kính đường lửa quanh viền (px)
-  const steps = 22;       // số điểm lửa mỗi bên
-  const stepAngle = 180 / steps;
 
-  avatarWrap.addEventListener("click", () => {
-    avatarWrap.querySelectorAll(".fire").forEach((f) => f.remove());
-    avatarWrap.classList.remove("lit");
-    void avatarWrap.offsetWidth; // ép trình duyệt chạy lại animation
-    avatarWrap.classList.add("lit");
+  // progress: 0 (đáy) → 1 (đỉnh). Bên phải và bên trái đi cùng lúc
+  function emit(progress) {
+    [1, -1].forEach((side) => {
+      const a = Math.PI / 2 - side * progress * Math.PI;
+      for (let j = 0; j < 3; j++) {
+        const r = R + (Math.random() - 0.5) * 10;
+        const outward = 0.25 + Math.random() * 0.6;
+        flames.push({
+          x: C + Math.cos(a) * r,
+          y: C + Math.sin(a) * r,
+          vx: Math.cos(a) * outward + (Math.random() - 0.5) * 0.3,
+          vy: Math.sin(a) * outward - (0.5 + Math.random() * 0.6),
+          size: 12 + Math.random() * 10,
+          age: 0,
+          life: LIFE_MS * (0.7 + Math.random() * 0.5),
+        });
+      }
+    });
+  }
 
-    const fire = document.createElement("div");
-    fire.className = "fire";
+  function loop(now) {
+    const dt = Math.min(now - lastT, 50);
+    lastT = now;
+    const k = dt / 16.67;
 
-    for (let i = 0; i <= steps; i++) {
-      const delay = (i / steps) * 0.9;
-      [
-        { angle: 180 - i * stepAngle, rot: -90 }, // bên phải: đáy lên đỉnh
-        { angle: 180 + i * stepAngle, rot: 90 },  // bên trái: đáy lên đỉnh
-      ].forEach(({ angle, rot }) => {
-        const s = document.createElement("span");
-        s.style.setProperty(
-          "--base",
-          `rotate(${angle}deg) translateY(${-RING_RADIUS}px) rotate(${rot}deg)`
-        );
-        s.style.setProperty("--w", (10 + Math.random() * 6) + "px");
-        s.style.setProperty("--h", (40 + Math.random() * 22) + "px");
-        s.style.setProperty("--delay", delay + "s");
-        fire.appendChild(s);
-      });
+    fctx.clearRect(0, 0, FS, FS);
+    fctx.globalCompositeOperation = "lighter";
+
+    if (burstStart !== null) {
+      const elapsed = now - burstStart;
+      if (elapsed < EMIT_MS) emit(elapsed / EMIT_MS);
+      else burstStart = null;
     }
 
-    avatarWrap.appendChild(fire);
+    for (let i = flames.length - 1; i >= 0; i--) {
+      const f = flames[i];
+      f.age += dt;
+      if (f.age >= f.life) { flames.splice(i, 1); continue; }
+
+      f.x += f.vx * k;
+      f.y += f.vy * k;
+      f.vy -= 0.02 * k; // lửa bốc lên
+
+      const t = f.age / f.life; // 0 → 1
+      const idx = Math.min(flameSprites.length - 1, Math.floor(t * flameSprites.length));
+      const s = f.size * (1 + t * 0.8) * (1 - t * 0.5);
+      fctx.globalAlpha = Math.min(1, (1 - t) * 1.6);
+      fctx.drawImage(flameSprites[idx], f.x - s / 2, f.y - s / 2, s, s);
+    }
+
+    fctx.globalAlpha = 1;
+    fctx.globalCompositeOperation = "source-over";
+
+    if (burstStart !== null || flames.length) {
+      requestAnimationFrame(loop);
+    } else {
+      running = false;
+    }
+  }
+
+  avatarWrap.addEventListener("click", () => {
+    avatarWrap.classList.remove("lit");
+    void avatarWrap.offsetWidth; // ép trình duyệt chạy lại hiệu ứng sáng
+    avatarWrap.classList.add("lit");
+
+    burstStart = performance.now();
+    if (!running) {
+      running = true;
+      lastT = performance.now();
+      requestAnimationFrame(loop);
+    }
 
     clearTimeout(fireTimer);
-    fireTimer = setTimeout(() => {
-      fire.remove();
-      avatarWrap.classList.remove("lit");
-    }, 2000);
+    fireTimer = setTimeout(() => avatarWrap.classList.remove("lit"), 2000);
   });
 }
