@@ -31,9 +31,9 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(circle at 20% 10%, rgba(255,95,162,.25), transparent 45%),
-    radial-gradient(circle at 80% 90%, rgba(94,231,255,.2), transparent 45%),
-    linear-gradient(160deg, rgba(0,0,0,.45), rgba(0,0,0,.8));
+    radial-gradient(circle at 20% 10%, rgba(255,95,162,.15), transparent 45%),
+    radial-gradient(circle at 80% 90%, rgba(94,231,255,.12), transparent 45%),
+    linear-gradient(160deg, rgba(0,0,0,.25), rgba(0,0,0,.55));
   z-index: -1;
   pointer-events: none;
 }
