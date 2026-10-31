@@ -35,7 +35,7 @@ body::before {
   z-index: -2;
 }
 
-/* Vùng chứa các hạt bay nền */
+/* Hạt bay nền */
 #particles {
   position: fixed;
   inset: 0;
@@ -43,8 +43,6 @@ body::before {
   pointer-events: none;
   overflow: hidden;
 }
-
-/* Hạt tròn bay lên */
 .particle {
   position: absolute;
   bottom: -20px;
@@ -100,31 +98,30 @@ body::before {
   to   { opacity: 1; transform: none; }
 }
 
-/* Avatar đứng yên, có vầng sáng dài chạy quanh viền mỗi 5s */
+/* Avatar đứng yên, viền mảnh và vầng sáng chạy quanh mỗi 5s */
 .avatar-wrap {
   position: relative;
   width: 150px;
   height: 150px;
   margin: 0 auto 1.4rem;
-  cursor: pointer;
 }
 .avatar-wrap::before {
   content: "";
   position: absolute;
-  inset: -8px;
+  inset: -6px;
   border-radius: 50%;
   background: conic-gradient(
     from 0deg,
     transparent 0deg,
-    transparent 200deg,
-    rgba(94,231,255,.15) 260deg,
-    rgba(94,231,255,.7) 320deg,
-    #ffffff 352deg,
+    transparent 230deg,
+    rgba(94,231,255,.35) 290deg,
+    #5ee7ff 330deg,
+    #ffffff 350deg,
     transparent 360deg
   );
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 100%);
-          mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 100%);
-  filter: drop-shadow(0 0 8px var(--cyan)) drop-shadow(0 0 16px rgba(94,231,255,.6));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 100%);
+          mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 100%);
+  filter: drop-shadow(0 0 6px var(--cyan));
   animation: orbit-spin 5s linear infinite;
 }
 @keyframes orbit-spin { to { transform: rotate(360deg); } }
@@ -139,34 +136,6 @@ body::before {
   background: #15151d;
   border: 2px solid rgba(255,255,255,.18);
   box-shadow: 0 0 20px rgba(94,231,255,.25);
-}
-
-/* Ngọn lửa bùng lên khi bấm avatar */
-.fire {
-  position: absolute;
-  left: -50px;
-  right: -50px;
-  bottom: -20px;
-  height: 230px;
-  pointer-events: none;
-  z-index: 2;
-}
-.fire span {
-  position: absolute;
-  bottom: 0;
-  width: var(--w);
-  height: var(--h);
-  border-radius: 50% 50% 35% 35%;
-  background: linear-gradient(to top, #ff2d75, #ff8a3d 45%, #ffe27a 80%, transparent);
-  filter: blur(2px);
-  opacity: 0;
-  animation: flame-rise 1.4s ease-out forwards;
-  animation-delay: var(--delay);
-}
-@keyframes flame-rise {
-  0%   { transform: translate(0, 0) scaleY(.3); opacity: 0; }
-  20%  { opacity: 1; }
-  100% { transform: translate(var(--dx), calc(var(--h) * -1.4)) scaleY(1); opacity: 0; }
 }
 
 /* Chữ */
