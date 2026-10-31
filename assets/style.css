@@ -35,7 +35,7 @@ body::before {
   z-index: -2;
 }
 
-/* Vùng chứa các hạt bay nền */
+/* Hạt bay nền */
 #particles {
   position: fixed;
   inset: 0;
@@ -61,8 +61,10 @@ body::before {
   100% { transform: translate(calc(var(--x) * -1), -110vh) scale(.6); opacity: 0; }
 }
 
-/* Khung chính */
+/* Khung chính, có vệt sáng quét mỗi 10s */
 .card-wrap {
+  position: relative;
+  overflow: hidden;
   width: min(460px, 100%);
   background: var(--glass);
   border: 1px solid var(--glass-border);
@@ -74,67 +76,69 @@ body::before {
   box-shadow: 0 25px 70px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08);
   animation: rise .9s cubic-bezier(.2,.8,.2,1) both;
 }
+.card-wrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,.16), transparent);
+  transform: skewX(-20deg);
+  pointer-events: none;
+  animation: sweep 10s ease-in-out infinite;
+}
+@keyframes sweep {
+  0%   { left: -75%; }
+  12%  { left: 125%; }
+  100% { left: 125%; }
+}
 @keyframes rise {
   from { opacity: 0; transform: translateY(30px) scale(.98); }
   to   { opacity: 1; transform: none; }
 }
 
-/* Avatar đứng yên, viền lửa xoay quanh */
+/* Avatar đứng yên, viền mảnh và vầng sáng chạy quanh mỗi 5s */
 .avatar-wrap {
   position: relative;
   width: 150px;
   height: 150px;
   margin: 0 auto 1.4rem;
-  isolation: isolate;
 }
-
-/* Lớp lửa chính */
-.flame {
+.avatar-wrap::before {
+  content: "";
   position: absolute;
-  inset: -16px;
+  inset: -6px;
   border-radius: 50%;
   background: conic-gradient(
     from 0deg,
-    #ff2d75, #ff8a3d, #ffe27a, #b44cff,
-    #ff2d75, #ff8a3d, #ffe27a, #b44cff, #ff2d75
+    transparent 0deg,
+    transparent 230deg,
+    rgba(94,231,255,.35) 290deg,
+    #5ee7ff 330deg,
+    #ffffff 350deg,
+    transparent 360deg
   );
-  filter: blur(6px) saturate(1.5);
-  -webkit-mask: radial-gradient(closest-side, transparent 68%, #000 80%, #000 100%);
-          mask: radial-gradient(closest-side, transparent 68%, #000 80%, #000 100%);
-  animation: flame-spin 2.4s linear infinite;
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 100%);
+          mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 100%);
+  filter: drop-shadow(0 0 6px var(--cyan));
+  animation: orbit-spin 5s linear infinite;
 }
+@keyframes orbit-spin { to { transform: rotate(360deg); } }
 
-/* Lớp lửa thứ hai, quay ngược chiều, mảnh hơn tạo độ chớp */
-.flame-2 {
-  inset: -10px;
-  filter: blur(2px) saturate(1.8);
-  -webkit-mask: radial-gradient(closest-side, transparent 72%, #000 84%, #000 100%);
-          mask: radial-gradient(closest-side, transparent 72%, #000 84%, #000 100%);
-  animation: flame-spin-rev 3.6s linear infinite, flicker 1.2s ease-in-out infinite alternate;
-}
-
-@keyframes flame-spin     { to { transform: rotate(360deg); } }
-@keyframes flame-spin-rev { to { transform: rotate(-360deg); } }
-@keyframes flicker {
-  from { opacity: .7; }
-  to   { opacity: 1; }
-}
-
-/* Ảnh avatar */
 .avatar {
   position: relative;
-  z-index: 1;
   display: block;
   width: 100%;
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
   background: #15151d;
-  border: 3px solid #ff3d8b;
-  box-shadow: 0 0 14px rgba(255, 61, 139, .7), 0 0 26px rgba(180, 76, 255, .5);
+  border: 2px solid rgba(255,255,255,.18);
+  box-shadow: 0 0 20px rgba(94,231,255,.25);
 }
 
-/* Chữ trang trí */
+/* Chữ */
 .name {
   font-family: "Bungee", "Righteous", sans-serif;
   font-size: 2rem;
