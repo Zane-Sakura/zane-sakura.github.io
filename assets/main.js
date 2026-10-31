@@ -10,18 +10,6 @@ if (daysEl) {
   daysEl.textContent = `Đã đồng hành cùng server được ${days} ngày`;
 }
 
-// Gõ chữ cho dòng chức danh
-const typedEl = document.getElementById("typed");
-if (typedEl) {
-  const text = "Artist & Coder & Lập trình viên Game";
-  let i = 0;
-  const type = () => {
-    typedEl.textContent = text.slice(0, i++);
-    if (i <= text.length) setTimeout(type, 70);
-  };
-  setTimeout(type, 600);
-}
-
 // Gợn sóng khi bấm nút liên kết
 document.querySelectorAll(".link-btn").forEach((btn) => {
   btn.addEventListener("click", (e) => {
