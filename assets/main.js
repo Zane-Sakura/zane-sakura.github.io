@@ -2,7 +2,7 @@
 const yearEl = document.getElementById("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-// Đếm ngày đã làm server (đổi ngày này thành ngày bạn muốn)
+// Đếm ngày đã làm server (đổi ngày này thành ngày bạn muốn, định dạng YYYY-MM-DD)
 const startDate = new Date("2024-01-01");
 const daysEl = document.getElementById("days");
 if (daysEl) {
@@ -80,37 +80,39 @@ if (card && canFine) {
   });
 }
 
-// Bấm hoặc chạm avatar: avatar sáng lên, lửa chạy từ đáy lên hai bên theo viền
+// Bấm hoặc chạm avatar: avatar sáng lên, lửa chạy từ đáy lên hai bên viền đến đỉnh
 const avatarWrap = document.querySelector(".avatar-wrap");
 if (avatarWrap) {
   let fireTimer = null;
+  const RING_RADIUS = 82; // bán kính đường lửa quanh viền (px)
+  const steps = 22;       // số điểm lửa mỗi bên
+  const stepAngle = 180 / steps;
 
   avatarWrap.addEventListener("click", () => {
     avatarWrap.querySelectorAll(".fire").forEach((f) => f.remove());
     avatarWrap.classList.remove("lit");
-    void avatarWrap.offsetWidth;
+    void avatarWrap.offsetWidth; // ép trình duyệt chạy lại animation
     avatarWrap.classList.add("lit");
 
     const fire = document.createElement("div");
     fire.className = "fire";
 
-    const n = 14;
-    const step = 180 / n;
-    for (let i = 0; i <= n; i++) {
-      const delay = (i / n) * 0.6;
-      const right = document.createElement("span");
-      right.style.setProperty("--a", 180 - i * step + "deg");
-      right.style.setProperty("--w", (14 + Math.random() * 6) + "px");
-      right.style.setProperty("--h", (70 + Math.random() * 25) + "px");
-      right.style.setProperty("--delay", delay + "s");
-      fire.appendChild(right);
-
-      const left = document.createElement("span");
-      left.style.setProperty("--a", 180 + i * step + "deg");
-      left.style.setProperty("--w", (14 + Math.random() * 6) + "px");
-      left.style.setProperty("--h", (70 + Math.random() * 25) + "px");
-      left.style.setProperty("--delay", delay + "s");
-      fire.appendChild(left);
+    for (let i = 0; i <= steps; i++) {
+      const delay = (i / steps) * 0.9;
+      [
+        { angle: 180 - i * stepAngle, rot: -90 }, // bên phải: đáy lên đỉnh
+        { angle: 180 + i * stepAngle, rot: 90 },  // bên trái: đáy lên đỉnh
+      ].forEach(({ angle, rot }) => {
+        const s = document.createElement("span");
+        s.style.setProperty(
+          "--base",
+          `rotate(${angle}deg) translateY(${-RING_RADIUS}px) rotate(${rot}deg)`
+        );
+        s.style.setProperty("--w", (10 + Math.random() * 6) + "px");
+        s.style.setProperty("--h", (40 + Math.random() * 22) + "px");
+        s.style.setProperty("--delay", delay + "s");
+        fire.appendChild(s);
+      });
     }
 
     avatarWrap.appendChild(fire);
