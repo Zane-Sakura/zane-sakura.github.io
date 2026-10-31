@@ -35,7 +35,7 @@ body::before {
   z-index: -2;
 }
 
-/* Hạt tròn bay nền */
+/* Vùng chứa hạt bay nền */
 #particles {
   position: fixed;
   inset: 0;
@@ -43,6 +43,8 @@ body::before {
   pointer-events: none;
   overflow: hidden;
 }
+
+/* Hạt tròn bay lên */
 .particle {
   position: absolute;
   bottom: -20px;
@@ -98,18 +100,20 @@ body::before {
   to   { opacity: 1; transform: none; }
 }
 
-/* Avatar: vệt sáng dày chạy quanh viền mỗi 5s */
+/* Avatar đứng yên, vệt sáng dày chạy quanh mỗi 5s */
 .avatar-wrap {
   position: relative;
   width: 150px;
   height: 150px;
   margin: 0 auto 1.4rem;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  isolation: isolate;
 }
 .avatar-wrap::before {
   content: "";
   position: absolute;
-  inset: -8px;
+  inset: -9px;
   border-radius: 50%;
   background: conic-gradient(
     from 0deg,
@@ -117,19 +121,21 @@ body::before {
     transparent 190deg,
     rgba(94,231,255,.25) 250deg,
     rgba(94,231,255,.8) 310deg,
-    #ffffff 350deg,
+    #5ee7ff 335deg,
+    #ffffff 352deg,
     transparent 360deg
   );
   -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 100%);
           mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 100%);
   filter: drop-shadow(0 0 8px var(--cyan)) drop-shadow(0 0 16px rgba(94,231,255,.6));
   animation: orbit-spin 5s linear infinite;
-  pointer-events: none;
+  z-index: 0;
 }
 @keyframes orbit-spin { to { transform: rotate(360deg); } }
 
 .avatar {
   position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
   height: 100%;
@@ -140,7 +146,7 @@ body::before {
   box-shadow: 0 0 20px rgba(94,231,255,.25);
 }
 
-/* Lửa bao quanh avatar khi bấm */
+/* Ngọn lửa bừng lên bao quanh avatar khi bấm */
 .fire {
   position: absolute;
   inset: -40px;
@@ -150,23 +156,23 @@ body::before {
 .fire span {
   position: absolute;
   left: 50%;
-  top: 50%;
+  bottom: 50%;
   width: var(--w);
   height: var(--h);
-  margin: calc(var(--h) / -2) 0 0 calc(var(--w) / -2);
-  border-radius: 50% 50% 40% 40%;
-  background: linear-gradient(to top, #ff2d75, #ff8a3d 45%, #ffe27a 85%, transparent);
+  margin-left: calc(var(--w) / -2);
+  border-radius: 50% 50% 35% 35%;
+  background: linear-gradient(to top, #ff2d75, #ff8a3d 45%, #ffe27a 80%, transparent);
   filter: blur(2px);
   opacity: 0;
-  transform: rotate(var(--a)) translateY(0) scale(.4);
   transform-origin: 50% 100%;
-  animation: flame-burst 1.3s ease-out forwards;
+  animation: flame-burst 1.4s ease-out forwards;
   animation-delay: var(--delay);
+  transform: rotate(var(--a));
 }
 @keyframes flame-burst {
-  0%   { opacity: 0; transform: rotate(var(--a)) translateY(0) scale(.4); }
-  25%  { opacity: 1; }
-  100% { opacity: 0; transform: rotate(var(--a)) translateY(calc(var(--h) * -0.6)) scale(1.1); }
+  0%   { transform: rotate(var(--a)) translateY(0) scale(.3); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: rotate(var(--a)) translateY(calc(var(--r) * -1)) scale(1); opacity: 0; }
 }
 
 /* Chữ */
