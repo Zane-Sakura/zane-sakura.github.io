@@ -23,68 +23,162 @@ function makeSprite(color, size = 64) {
   return c;
 }
 
-// ===== Nền nước gợn sóng =====
+// ===== Nền nước gợn sóng (WebGL: nét, nhẹ, bấm vào đâu cũng gợn) =====
 const waterCanvas = document.getElementById("water");
-if (waterCanvas && !prefersReduce) {
-  const wctx = waterCanvas.getContext("2d");
-  const bgImg = new Image();
-  bgImg.src = "assets/background.jpg";
+const gl = waterCanvas && !prefersReduce
+  ? waterCanvas.getContext("webgl", { antialias: false })
+  : null;
 
-  const SCALE = 0.25;  // độ phân giải nước (thấp hơn = nhẹ máy hơn)
-  const AMP = 2.4;     // độ gợn (tăng để gợn mạnh hơn)
-  let w = 0, h = 0, srcData = null, dst = null, dstData = null;
+if (gl) {
+  const VS = `
+    attribute vec2 aPos;
+    void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
+  `;
+  const FS = `
+    #ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+    #else
+    precision mediump float;
+    #endif
+    uniform sampler2D uTex;
+    uniform vec2 uRes;      // kích thước khung nhìn (px CSS)
+    uniform vec2 uImg;      // kích thước ảnh nền gốc
+    uniform float uDpr;     // tỉ lệ pixel thiết bị
+    uniform float uTime;
+    uniform vec2 uRipP[8];  // tâm các gợn do bấm
+    uniform float uRipA[8]; // tuổi của mỗi gợn (giây), < 0 là không dùng
 
-  function prepare() {
+    void main() {
+      // Tọa độ pixel CSS, gốc ở góc trên-trái
+      vec2 p = vec2(gl_FragCoord.x / uDpr, uRes.y - gl_FragCoord.y / uDpr);
+      float t = uTime;
+
+      // Gợn nền rất nhẹ, luôn chuyển động
+      vec2 d = vec2(0.0);
+      d += vec2(sin(p.y * 0.035 + t * 1.2), cos(p.x * 0.03 - t * 0.9)) * 0.9;
+      d += vec2(sin((p.x + p.y) * 0.02 - t * 0.7), 0.0) * 0.6;
+
+      // Gợn lan ra từ điểm bấm
+      float hl = 0.0;
+      for (int i = 0; i < 8; i++) {
+        float age = uRipA[i];
+        if (age >= 0.0) {
+          vec2 v = p - uRipP[i];
+          float r = length(v);
+          vec2 dir = r > 0.001 ? v / r : vec2(0.0);
+          float dist = r - age * 180.0;             // vị trí đầu sóng, lan 180px/giây
+          float env = exp(-dist * dist / 900.0) * exp(-age * 1.8);
+          float w = sin(dist * 0.12);
+          d += dir * w * env * 10.0;
+          hl += w * env;
+        }
+      }
+
+      // Ánh sáng nhẹ ở đỉnh sóng
+      vec2 q = p + d;
+
+      // Phủ ảnh kiểu "cover" (giữ tỉ lệ, lấp đầy màn hình)
+      float s = max(uRes.x / uImg.x, uRes.y / uImg.y);
+      vec2 off = (uRes - uImg * s) * 0.5;
+      vec2 uv = (q - off) / (uImg * s);
+
+      vec3 col = texture2D(uTex, uv).rgb;
+      col += hl * 0.04;
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `;
+
+  function compile(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
+    return s;
+  }
+
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+
+  // Một tam giác phủ toàn màn hình
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(prog, "aPos");
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  // Texture ảnh nền
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  const uRes = gl.getUniformLocation(prog, "uRes");
+  const uImg = gl.getUniformLocation(prog, "uImg");
+  const uDpr = gl.getUniformLocation(prog, "uDpr");
+  const uTime = gl.getUniformLocation(prog, "uTime");
+  const uRipP = gl.getUniformLocation(prog, "uRipP");
+  const uRipA = gl.getUniformLocation(prog, "uRipA");
+
+  const ripP = new Float32Array(16);
+  const ripA = new Float32Array(8);
+  let ripples = []; // { x, y, t0 }
+  let imgReady = false;
+
+  const img = new Image();
+  img.onload = () => {
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
+    gl.uniform2f(uImg, img.width, img.height);
+    imgReady = true;
+  };
+  img.src = "assets/background.jpg";
+
+  function resize() {
     const W = window.innerWidth;
     const H = window.innerHeight;
-    w = Math.max(1, Math.round(W * SCALE));
-    h = Math.max(1, Math.round(H * SCALE));
-    waterCanvas.width = w;
-    waterCanvas.height = h;
-
-    // Vẽ ảnh nền kiểu "cover" vào canvas nhỏ
-    const off = document.createElement("canvas");
-    off.width = w;
-    off.height = h;
-    const octx = off.getContext("2d");
-    const ratio = Math.max(w / bgImg.width, h / bgImg.height);
-    const dw = bgImg.width * ratio;
-    const dh = bgImg.height * ratio;
-    octx.drawImage(bgImg, (w - dw) / 2, (h - dh) / 2, dw, dh);
-
-    srcData = octx.getImageData(0, 0, w, h).data;
-    dst = wctx.createImageData(w, h);
-    dstData = dst.data;
+    waterCanvas.width = Math.round(W * DPR);
+    waterCanvas.height = Math.round(H * DPR);
+    gl.viewport(0, 0, waterCanvas.width, waterCanvas.height);
+    gl.uniform2f(uRes, W, H);
+    gl.uniform1f(uDpr, waterCanvas.width / W);
   }
+  resize();
+  window.addEventListener("resize", resize);
 
-  function frame(now) {
-    const t = now / 1000;
-    for (let y = 0; y < h; y++) {
-      const offX = Math.sin(y * 0.12 + t * 1.3) * AMP
-                 + Math.sin(y * 0.05 - t * 0.7) * AMP * 0.6;
-      for (let x = 0; x < w; x++) {
-        const offY = Math.cos(x * 0.1 + t * 1.1) * AMP * 0.5;
-        let sx = Math.round(x + offX);
-        let sy = Math.round(y + offY);
-        if (sx < 0) sx = 0; else if (sx >= w) sx = w - 1;
-        if (sy < 0) sy = 0; else if (sy >= h) sy = h - 1;
-        const si = (sy * w + sx) * 4;
-        const di = (y * w + x) * 4;
-        dstData[di]     = srcData[si];
-        dstData[di + 1] = srcData[si + 1];
-        dstData[di + 2] = srcData[si + 2];
-        dstData[di + 3] = 255;
-      }
+  // Bấm vào nền (ngoài thẻ chính) để tạo gợn
+  window.addEventListener("pointerdown", (e) => {
+    if (e.target.closest && e.target.closest(".card-wrap")) return;
+    ripples.push({ x: e.clientX, y: e.clientY, t0: performance.now() / 1000 });
+    if (ripples.length > 8) ripples.shift();
+  });
+
+  function render(nowMs) {
+    const now = nowMs / 1000;
+    ripples = ripples.filter((r) => now - r.t0 < 6);
+
+    ripP.fill(0);
+    ripA.fill(-1);
+    ripples.forEach((r, i) => {
+      ripP[i * 2] = r.x;
+      ripP[i * 2 + 1] = r.y;
+      ripA[i] = now - r.t0;
+    });
+
+    if (imgReady) {
+      gl.uniform1f(uTime, now);
+      gl.uniform2fv(uRipP, ripP);
+      gl.uniform1fv(uRipA, ripA);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
-    wctx.putImageData(dst, 0, 0);
-    requestAnimationFrame(frame);
+    requestAnimationFrame(render);
   }
-
-  bgImg.onload = () => {
-    prepare();
-    window.addEventListener("resize", prepare);
-    requestAnimationFrame(frame);
-  };
+  requestAnimationFrame(render);
 }
 
 // ===== Canvas hạt: hạt bay lên và đốm sáng theo chuột =====
