@@ -292,3 +292,15 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+/* Lớp trang trí không nhận chạm, để chạm xuyên xuống avatar */
+.avatar-wrap::before,
+.avatar-wrap::after,
+.fire,
+.avatar-wrap canvas {
+  pointer-events: none;
+}
+.avatar-wrap {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
