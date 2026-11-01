@@ -307,3 +307,27 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+/* Nút bật/tắt nhạc nền */
+.music-btn {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 10;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text);
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .3s ease;
+}
+.music-btn:hover { transform: scale(1.08); box-shadow: 0 0 18px rgba(94,231,255,.5); }
+.music-btn.playing { color: var(--cyan); animation: music-pulse 1.4s ease-in-out infinite; }
+@keyframes music-pulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(94,231,255,.4); }
+  50%      { box-shadow: 0 0 18px rgba(94,231,255,.8); }
+}
