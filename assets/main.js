@@ -456,3 +456,32 @@ if (avatarWrap && fireCanvas) {
     }
   });
 }
+// ===== Nhạc nền: bật/tắt bằng nút, nhớ lựa chọn của người xem =====
+const bgm = document.getElementById("bgm");
+const musicBtn = document.getElementById("music-btn");
+if (bgm && musicBtn) {
+  bgm.volume = 0.35;
+
+  function setPlaying(on) {
+    musicBtn.classList.toggle("playing", on);
+    musicBtn.textContent = on ? "♫" : "♪";
+    musicBtn.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+
+  musicBtn.addEventListener("click", () => {
+    if (bgm.paused) {
+      bgm.play()
+        .then(() => { setPlaying(true); localStorage.setItem("bgm", "on"); })
+        .catch(() => setPlaying(false));
+    } else {
+      bgm.pause();
+      setPlaying(false);
+      localStorage.setItem("bgm", "off");
+    }
+  });
+
+  // Nếu lần trước người xem đã bật nhạc, thử phát lại (trình duyệt có thể chặn)
+  if (localStorage.getItem("bgm") === "on") {
+    bgm.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+  }
+}
